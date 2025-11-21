@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ApiPlan {
+  FREE
+  PAID
+}
+
+enum KeyStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum PriceTier {
+  BASIC
+  PLUS
+  PREMIUM
+}
+
+model ApiKey {
+  id               String    @id @default(cuid())
+  key              String    @unique
+  email            String
+  plan             ApiPlan   @default(FREE)
+  status           KeyStatus @default(ACTIVE)
+  monthlyLimit     Int?
+  callsThisMonth   Int       @default(0)
+  stripeCustomerId String?
+  stripeSubItemId  String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  UsageLogs        UsageLog[]
+}
+
+model UsageLog {
+  id          String   @id @default(cuid())
+  apiKey      ApiKey   @relation(fields: [apiKeyId], references: [id])
+  apiKeyId    String
+  endpoint    String
+  statusCode  Int
+  billedUnits Int
+  createdAt   DateTime @default(now())
+}
+
+model Endpoint {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String
+  category    String
+  priceTier   PriceTier
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
