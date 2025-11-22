@@ -23,7 +23,6 @@ export async function POST(req: Request) {
     line_items: [
       {
         price: process.env.STRIPE_PRICE_USAGE_ID,
-        quantity: 1,
       },
     ],
     success_url: "http://localhost:3000/upgrade/success",
