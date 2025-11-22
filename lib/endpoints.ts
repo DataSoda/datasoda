@@ -14,6 +14,13 @@ export const endpoints: EndpointMeta[] = [
     category: "Validation",
     priceTier: "BASIC",
   },
+  {
+    slug: "extract-metadata",
+    name: "Extract URL Metadata",
+    description: "Fetches a URL and extracts basic HTML metadata.",
+    category: "Metadata",
+    priceTier: "BASIC",
+  },
 ]
 
 export function getEndpoint(slug: string) {
