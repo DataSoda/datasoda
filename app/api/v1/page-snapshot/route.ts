@@ -4,7 +4,12 @@ import { logUsage, incrementMonthlyCount } from "@/lib/usage"
 
 export async function POST(req: Request) {
   const { apiKey, error } = await requireApiKey(req)
-  if (error) return error
+  if (error || !apiKey) {
+    return error ?? new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    })
+  }
 
   let body: any
   try {
