@@ -24,7 +24,7 @@ export const endpoints: EndpointMeta[] = [
   {
     slug: "ip-lookup",
     name: "IP Lookup",
-    description: "Parses an IP address and determines version and privacy.",
+    description: "Parses an IP address and tells if it is valid, version 4/6 and private/public.",
     category: "Network",
     priceTier: "BASIC",
   },
@@ -47,6 +47,13 @@ export const endpoints: EndpointMeta[] = [
     name: "Slugify",
     description: "Converts text into a clean URL-safe slug.",
     category: "Text",
+    priceTier: "BASIC",
+  },
+  {
+    slug: "json-parse",
+    name: "JSON Parse",
+    description: "Safely parses JSON and returns either the object or a structured error.",
+    category: "Utility",
     priceTier: "BASIC",
   },
 ]
