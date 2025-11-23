@@ -1,32 +1,6 @@
+import crypto from "crypto"
 import { requireApiKey } from "@/lib/auth"
 import { logUsage, incrementMonthlyCount } from "@/lib/usage"
-
-function extractMeta(html: string, name: string): string | null {
-  const re = new RegExp(`<meta[^>]+name=["']${name}["'][^>]*content=["']([^"']*)["'][^>]*>`, "i")
-  const match = html.match(re)
-  return match?.[1]?.trim() || null
-}
-
-function extractCanonical(html: string): string | null {
-  const re = /<link[^>]+rel=["']canonical["'][^>]*href=["']([^"']*)["'][^>]*>/i
-  const match = html.match(re)
-  return match?.[1]?.trim() || null
-}
-
-function extractTitle(html: string): string | null {
-  const match = html.match(/<title[^>]*>([^<]*)<\/title>/i)
-  return match?.[1]?.trim() || null
-}
-
-async function sha256Hex(input: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(input)
-  const digest = await crypto.subtle.digest("SHA-256", data)
-  const bytes = new Uint8Array(digest)
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("")
-}
 
 export async function POST(req: Request) {
   const { apiKey, error } = await requireApiKey(req)
@@ -42,8 +16,7 @@ export async function POST(req: Request) {
     })
   }
 
-  const url = typeof body?.url === "string" ? body.url.trim() : ""
-
+  const url = typeof body.url === "string" ? body.url : null
   if (!url) {
     return new Response(JSON.stringify({ error: "Missing 'url' field" }), {
       status: 400,
@@ -51,6 +24,9 @@ export async function POST(req: Request) {
     })
   }
 
+  const startedAt = Date.now()
+
+  let finalUrl: string | null = null
   let ok = false
   let status: number | null = null
   let contentType: string | null = null
@@ -59,34 +35,55 @@ export async function POST(req: Request) {
   let description: string | null = null
   let canonicalUrl: string | null = null
   let contentHash: string | null = null
-  let finalUrl: string | null = null
   let errorMessage: string | null = null
 
-  const startedAt = Date.now()
-
   try {
-    const res = await fetch(url, { redirect: "follow" })
-    status = res.status
-    ok = res.ok
-    contentType = res.headers.get("content-type") || null
+    const res = await fetch(url, {
+      redirect: "follow",
+      headers: {
+        "User-Agent": "DataSodaPageSnapshot/1.0",
+      },
+    })
+
     finalUrl = res.url
+    ok = res.ok
+    status = res.status
+    contentType = res.headers.get("content-type")
+    const lenHeader = res.headers.get("content-length")
+    contentLength = lenHeader ? Number(lenHeader) || null : null
 
-    const html = await res.text()
-    const encoder = new TextEncoder()
-    contentLength = encoder.encode(html).length
+    if (contentType && contentType.includes("text/html")) {
+      const text = await res.text()
 
-    title = extractTitle(html)
-    description = extractMeta(html, "description")
-    canonicalUrl = extractCanonical(html)
-    contentHash = await sha256Hex(html)
-  } catch {
-    errorMessage = "Fetch failed"
+      const titleMatch = text.match(/<title[^>]*>([^<]*)<\/title>/i)
+      title = titleMatch?.[1]?.trim() || null
+
+      const descMatch = text.match(
+        /<meta\s+name=["']description["']\s+content=["']([^"']*)["'][^>]*>/i,
+      )
+      description = descMatch?.[1]?.trim() || null
+
+      const canonicalMatch = text.match(
+        /<link\s+rel=["']canonical["']\s+href=["']([^"']*)["'][^>]*>/i,
+      )
+      canonicalUrl = canonicalMatch?.[1]?.trim() || null
+
+      contentHash = crypto.createHash("sha256").update(text).digest("hex")
+    } else {
+      const buf = await res.arrayBuffer()
+      contentHash = crypto
+        .createHash("sha256")
+        .update(Buffer.from(buf))
+        .digest("hex")
+    }
+  } catch (e: any) {
+    errorMessage = e?.message || "Fetch failed"
   }
 
   const responseTimeMs = Date.now() - startedAt
 
-  await logUsage(apiKey!.id, "page-snapshot", 200, 0)
-  await incrementMonthlyCount(apiKey!.id)
+  await logUsage(apiKey.id, "page-snapshot", 200, 0)
+  await incrementMonthlyCount(apiKey.id)
 
   return new Response(
     JSON.stringify({
