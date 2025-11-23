@@ -35,6 +35,13 @@ export const endpoints: EndpointMeta[] = [
     category: "Network",
     priceTier: "BASIC",
   },
+  {
+    slug: "text-clean",
+    name: "Text Clean",
+    description: "Normalizes whitespace and trims text for easier downstream processing.",
+    category: "Text",
+    priceTier: "BASIC",
+  },
 ]
 
 export function getEndpoint(slug: string) {
