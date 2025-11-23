@@ -1,22 +1,20 @@
 import Link from "next/link"
 import { endpoints } from "@/lib/endpoints"
 
-type PageProps = {
-  params: Promise<{ slug: string }>
-}
-
 const examples: Record<
   string,
   {
-    method: string
+    method: "GET" | "POST"
     path: string
-    sampleResponse: string
+    query?: string
     body?: string
+    sampleResponse?: string
   }
 > = {
   "validate-email": {
     method: "GET",
-    path: "/api/v1/validate-email?email=test@example.com",
+    path: "/api/v1/validate-email",
+    query: "?email=test@example.com",
     sampleResponse: `{
   "email": "test@example.com",
   "valid": true
@@ -24,17 +22,19 @@ const examples: Record<
   },
   "extract-metadata": {
     method: "GET",
-    path: "/api/v1/extract-metadata?url=https://example.com",
+    path: "/api/v1/extract-metadata",
+    query: "?url=https://example.com",
     sampleResponse: `{
   "url": "https://example.com",
   "title": "Example Domain",
-  "description": "This domain is for use in illustrative examples.",
-  "status": 200
+  "description": "Example domain used for tests",
+  "icon": "https://example.com/favicon.ico"
 }`,
   },
   "ip-lookup": {
     method: "GET",
-    path: "/api/v1/ip-lookup?ip=8.8.8.8",
+    path: "/api/v1/ip-lookup",
+    query: "?ip=8.8.8.8",
     sampleResponse: `{
   "ip": "8.8.8.8",
   "valid": true,
@@ -44,28 +44,28 @@ const examples: Record<
   },
   "url-status": {
     method: "GET",
-    path: "/api/v1/url-status?url=https://example.com",
+    path: "/api/v1/url-status",
+    query: "?url=https://example.com",
     sampleResponse: `{
   "url": "https://example.com/",
   "finalUrl": "https://example.com/",
   "ok": true,
   "status": 200,
   "contentType": "text/html",
-  "responseTimeMs": 120,
-  "error": null
+  "responseTimeMs": 120
 }`,
   },
   "text-clean": {
     method: "POST",
     path: "/api/v1/text-clean",
     body: `{
-  "text": "  Hej   där   \\n\\n  DataSoda  "
+  "text": "  Hello   there  "
 }`,
     sampleResponse: `{
-  "original": "  Hej   där   \\n\\n  DataSoda  ",
-  "cleaned": "Hej där DataSoda",
-  "originalLength": 28,
-  "cleanedLength": 16,
+  "original": "  Hello   there  ",
+  "cleaned": "Hello there",
+  "originalLength": 18,
+  "cleanedLength": 11,
   "changed": true
 }`,
   },
@@ -73,13 +73,13 @@ const examples: Record<
     method: "POST",
     path: "/api/v1/slugify",
     body: `{
-  "text": "  Hej där — DataSoda! ™  "
+  "text": "DataSoda API Utils"
 }`,
     sampleResponse: `{
-  "original": "  Hej där — DataSoda! ™  ",
-  "slug": "hej-dar-datasoda-tm",
-  "originalLength": 25,
-  "slugLength": 19,
+  "original": "DataSoda API Utils",
+  "slug": "datasoda-api-utils",
+  "originalLength": 19,
+  "slugLength": 18,
   "empty": false
 }`,
   },
@@ -87,167 +87,138 @@ const examples: Record<
     method: "POST",
     path: "/api/v1/json-parse",
     body: `{
-  "input": "{\\"hej\\":123}"
+  "input": "{ \\"hello\\": 123 }"
 }`,
     sampleResponse: `{
   "ok": true,
   "error": null,
   "parsed": {
-    "hej": 123
+    "hello": 123
   }
 }`,
   },
 }
 
-export default async function EndpointDocs({ params }: PageProps) {
-  const { slug } = await params
+export default async function EndpointDocs(props: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await props.params
   const endpoint = endpoints.find((e) => e.slug === slug)
 
   if (!endpoint) {
     return (
       <div className="mx-auto max-w-5xl px-6 py-10">
-        <p className="text-sm text-neutral-600">This endpoint does not exist.</p>
+        <div className="mb-4 text-xs text-neutral-500">
+          <Link href="/docs" className="hover:text-neutral-900">
+            API docs
+          </Link>{" "}
+          <span className="text-neutral-300">/</span>{" "}
+          <span className="text-neutral-700">Not found</span>
+        </div>
+        <h1 className="text-xl font-semibold text-neutral-900">Not found</h1>
+        <p className="mt-2 text-sm text-neutral-600">
+          This endpoint does not exist in the current registry.
+        </p>
       </div>
     )
   }
 
-  const meta = examples[endpoint.slug]
-  const method =
-    meta?.method ||
-    (endpoint.slug === "json-parse" ||
-    endpoint.slug === "text-clean" ||
-    endpoint.slug === "slugify"
-      ? "POST"
-      : "GET")
-  const path = meta?.path || `/api/v1/${endpoint.slug}`
-
-  const curlLines: string[] = []
-  curlLines.push(`curl -X ${method} "https://api.datasoda.io${path}" \\`)
-  curlLines.push(`  -H "x-api-key: YOUR_KEY"`)
-
-  if (method === "POST") {
-    curlLines.push(`  -H "Content-Type: application/json"`)
-    if (meta?.body) {
-      curlLines.push(`  -d '${meta.body}'`)
-    } else {
-      curlLines.push(`  -d '{ }'`)
-    }
-  }
-
-  const curlExample = curlLines.join("\n")
-  const sampleResponse =
-    meta?.sampleResponse ||
-    `{
-  "ok": true
-}`
+  const example = examples[endpoint.slug]
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
-      <header className="mb-6 border-b border-neutral-200 pb-5">
-        <div className="flex items-center gap-2 text-xs text-neutral-500">
-          <Link href="/docs" className="hover:text-neutral-800">
-            Docs
-          </Link>
-          <span className="text-neutral-300">/</span>
-          <span className="text-neutral-700">{endpoint.slug}</span>
-        </div>
+      <div className="mb-4 text-xs text-neutral-500">
+        <Link href="/docs" className="hover:text-neutral-900">
+          API docs
+        </Link>{" "}
+        <span className="text-neutral-300">/</span>{" "}
+        <span className="text-neutral-700">{endpoint.name}</span>
+      </div>
 
-        <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-neutral-950">
-              {endpoint.name}
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-600">
-              {endpoint.description}
-            </p>
-          </div>
-          <span className="mt-1 inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-xs font-medium text-neutral-700">
-            {endpoint.category}
-          </span>
+      <header className="mb-8 space-y-3">
+        <div className="inline-flex items-center gap-2 rounded-full bg-pink-50 px-3 py-1 text-[11px] font-medium text-pink-700">
+          <span className="h-1.5 w-1.5 rounded-full bg-pink-500" />
+          {endpoint.category}
         </div>
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
+          {endpoint.name}
+        </h1>
+        <p className="max-w-2xl text-sm leading-relaxed text-neutral-600">
+          {endpoint.description}
+        </p>
       </header>
 
-      <section className="grid items-start gap-6 md:grid-cols-[minmax(0,1.4fr),minmax(0,1.2fr)]">
-        <div className="space-y-4 rounded-2xl border border-neutral-200 bg-white px-4 py-4 text-sm shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                Endpoint
-              </p>
-              <p className="mt-1 text-sm text-neutral-700">
-                {method}{" "}
-                <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-[13px]">
-                  {path}
-                </code>
-              </p>
-            </div>
-            <span className="rounded-full border border-pink-100 bg-pink-50 px-2.5 py-1 text-xs font-medium text-pink-700">
-              Requires API key
+      <section className="mb-8 grid gap-4 md:grid-cols-2">
+        <div className="space-y-2 rounded-2xl border border-neutral-200 bg-white px-4 py-4 text-xs shadow-sm">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+            Endpoint
+          </h2>
+          <code className="mt-1 inline-flex items-center rounded-full bg-neutral-900 px-3 py-1.5 font-mono text-[11px] text-neutral-50">
+            <span className="mr-2 rounded-full bg-pink-500 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.16em]">
+              {example?.method ?? "GET"}
             </span>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-neutral-800">
-              Headers
+            {example?.path ?? `/api/v1/${endpoint.slug}`}
+          </code>
+          {example?.query && (
+            <p className="mt-2 text-[11px] text-neutral-600">
+              Query string:{" "}
+              <code className="rounded bg-neutral-100 px-1 py-0.5 text-[11px]">
+                {example.query}
+              </code>
             </p>
-            <ul className="space-y-1 text-sm text-neutral-700">
-              <li>
-                <code className="rounded bg-neutral-100 px-1 py-0.5 text-[13px]">
-                  x-api-key
-                </code>{" "}
-                your API key
-              </li>
-              {method === "POST" && (
-                <li>
-                  <code className="rounded bg-neutral-100 px-1 py-0.5 text-[13px]">
-                    Content-Type
-                  </code>{" "}
-                  application/json
-                </li>
-              )}
-            </ul>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-neutral-800">
-              Example request
-            </p>
-            <pre className="overflow-x-auto rounded-lg bg-neutral-900 px-3 py-3 font-mono text-[13px] text-neutral-50">
-{curlExample}
-            </pre>
-          </div>
-
-          {method === "POST" && meta?.body && (
-            <div>
-              <p className="mb-1 text-xs font-semibold text-neutral-800">
-                JSON body
-              </p>
-              <pre className="overflow-x-auto rounded-lg bg-neutral-100 px-3 py-3 font-mono text-[13px] text-neutral-800">
-{meta.body}
-              </pre>
-            </div>
           )}
         </div>
 
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-4 text-sm shadow-sm">
-            <h2 className="mb-3 text-sm font-semibold text-neutral-900">
-              Response example
-            </h2>
-            <pre className="overflow-x-auto rounded-lg bg-neutral-100 px-3 py-3 font-mono text-[13px] text-neutral-800">
-{sampleResponse}
-            </pre>
-          </div>
+        <div className="space-y-2 rounded-2xl border border-neutral-200 bg-white px-4 py-4 text-xs shadow-sm">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+            Headers
+          </h2>
+          <ul className="mt-1 space-y-1">
+            <li>
+              <code className="rounded bg-neutral-100 px-2 py-1 font-mono text-[11px]">
+                x-api-key: YOUR_KEY
+              </code>
+            </li>
+            {(example?.method === "POST" ||
+              endpoint.slug === "text-clean" ||
+              endpoint.slug === "slugify" ||
+              endpoint.slug === "json-parse") && (
+              <li>
+                <code className="rounded bg-neutral-100 px-2 py-1 font-mono text-[11px]">
+                  Content-Type: application/json
+                </code>
+              </li>
+            )}
+          </ul>
+        </div>
+      </section>
 
-          <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-4 text-xs text-neutral-600">
-            <p>
-              All responses are JSON. Errors use{" "}
-              <code className="rounded bg-neutral-100 px-1 py-0.5 text-[11px]">
-                {"{ \"error\": \"message\" }"}
-              </code>{" "}
-              with appropriate HTTP status codes.
-            </p>
-          </div>
+      <section className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-3 rounded-2xl border border-neutral-200 bg-white px-4 py-4 text-xs shadow-sm">
+          <h2 className="text-sm font-semibold text-neutral-900">
+            Request example
+          </h2>
+          <p className="text-[11px] text-neutral-600">
+            Example using curl against a local development server.
+          </p>
+          <pre className="overflow-x-auto rounded-xl bg-neutral-900 px-3 py-3 font-mono text-[11px] text-neutral-50">
+{`curl -X ${example?.method ?? "GET"} "http://localhost:3000${example?.path ?? `/api/v1/${endpoint.slug}`}${example?.query ?? ""}" \\
+  -H "x-api-key: YOUR_KEY"${example?.body ? ' \\\n  -H "Content-Type: application/json" \\\n  -d \'' + example.body.replace(/'/g, "'\\''") + '\'' : ""}`}
+          </pre>
+        </div>
+
+        <div className="space-y-3 rounded-2xl border border-neutral-200 bg-white px-4 py-4 text-xs shadow-sm">
+          <h2 className="text-sm font-semibold text-neutral-900">
+            Response example
+          </h2>
+          <p className="text-[11px] text-neutral-600">
+            Typical JSON response for a successful call.
+          </p>
+          <pre className="overflow-x-auto rounded-xl bg-neutral-100 px-3 py-3 font-mono text-[11px] text-neutral-900">
+{example?.sampleResponse ?? `{
+  "ok": true
+}`}
+          </pre>
         </div>
       </section>
     </div>
