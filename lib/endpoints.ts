@@ -56,6 +56,13 @@ export const endpoints: EndpointMeta[] = [
     category: "Utility",
     priceTier: "BASIC",
   },
+  {
+    slug: "page-snapshot",
+    name: "Page Snapshot",
+    description: "Fetches a web page and returns title, meta, status and a content hash.",
+    category: "Web",
+    priceTier: "PLUS",
+  },
 ]
 
 export function getEndpoint(slug: string) {
