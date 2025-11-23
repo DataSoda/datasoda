@@ -21,6 +21,20 @@ export const endpoints: EndpointMeta[] = [
     category: "Metadata",
     priceTier: "BASIC",
   },
+  {
+    slug: "ip-lookup",
+    name: "IP Lookup",
+    description: "Parses an IP address and tells if it is valid, version 4/6 and private/public.",
+    category: "Network",
+    priceTier: "BASIC",
+  },
+  {
+    slug: "url-status",
+    name: "URL Status",
+    description: "Checks a URL and returns HTTP status, content type and response time.",
+    category: "Network",
+    priceTier: "BASIC",
+  },
 ]
 
 export function getEndpoint(slug: string) {
