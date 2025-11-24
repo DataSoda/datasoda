@@ -1,20 +1,19 @@
-import type { HTMLAttributes, ReactNode } from "react"
+import type { ReactNode, HTMLAttributes } from "react"
 import { cn } from "@/lib/ui/cn"
-import { layout, typography } from "@/lib/ui/typography"
+import { typography } from "@/lib/ui/typography"
 
 type SectionProps = HTMLAttributes<HTMLElement> & {
   title: string
   description?: string
-  tight?: boolean
   children?: ReactNode
 }
 
 export function Section(props: SectionProps) {
-  const { title, description, tight = false, children, className, ...rest } = props
+  const { title, description, children, className, ...rest } = props
 
   return (
     <section
-      className={cn(tight ? layout.sectionTight : layout.section, className)}
+      className={cn("mt-10", className)}
       {...rest}
     >
       <header className="mb-4">

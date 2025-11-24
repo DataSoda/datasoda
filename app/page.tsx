@@ -1,109 +1,167 @@
 import Link from "next/link"
+import { typography, layout } from "@/lib/ui/typography"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
+import { Section } from "@/components/layout/section"
 import { endpoints } from "@/lib/endpoints"
 
+const postSlugs = new Set(["json-parse", "text-clean", "slugify", "page-snapshot"])
+
 export default function HomePage() {
-  const featured = endpoints.slice(0, 6)
+  const featured = endpoints
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-12">
-      <section className="grid gap-10 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] md:items-center">
-        <div className="space-y-6">
-          <p className="inline-flex items-center gap-2 rounded-full border border-pink-100 bg-pink-50 px-3 py-1 text-[11px] font-medium text-pink-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-pink-500" />
-            Usage-based HTTP utilities
+    <div>
+      <section>
+        <div className="max-w-2xl">
+          <h1 className={typography.heroTitle}>
+            HTTP endpoints for data and web
+          </h1>
+          <p className={typography.heroSubtitle}>
+            Small, focused HTTP endpoints for validation, text handling and basic web checks. JSON in, JSON out.
           </p>
+        </div>
 
-          <div className="space-y-3">
-            <h1 className="text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
-              Tiny HTTP endpoints for boring data work
-            </h1>
-            <p className="text-sm leading-relaxed text-neutral-600 sm:text-base">
-              DataSoda gives you small, single-purpose endpoints for validation,
-              metadata, text cleanup and inspection. Plain JSON in, plain JSON out.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href="/docs"
-              className="inline-flex items-center rounded-full bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
-            >
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <Button asChild>
+            <Link href="/docs">
               View API docs
             </Link>
-            <Link
-              href="/upgrade"
-              className="inline-flex items-center rounded-full border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 hover:border-neutral-400"
-            >
-              Pricing and limits
+          </Button>
+          <Button variant="secondary" asChild>
+            <Link href="/docs#auth">
+              Get a test key
             </Link>
-            <span className="text-xs text-neutral-500">
-              Start with a free key. Pay only when usage grows.
-            </span>
-          </div>
-        </div>
-
-        <div className="space-y-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-              Endpoints
-            </h2>
-            <Link
-              href="/docs"
-              className="text-xs font-medium text-pink-700 hover:text-pink-800"
-            >
-              View all
-            </Link>
-          </div>
-
-          <ul className="space-y-2 text-sm">
-            {featured.map((endpoint) => (
-              <li
-                key={endpoint.slug}
-                className="group flex items-center justify-between rounded-xl border border-neutral-200/80 bg-neutral-50 px-3 py-2.5 hover:border-pink-200 hover:bg-white"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-neutral-900">
-                    {endpoint.name}
-                  </p>
-                  <p className="truncate text-[11px] text-neutral-500">
-                    /api/v1/{endpoint.slug}
-                  </p>
-                </div>
-                <span className="ml-3 whitespace-nowrap rounded-full bg-neutral-900 px-2 py-1 text-[10px] font-medium text-neutral-50">
-                  {endpoint.category}
-                </span>
-              </li>
-            ))}
-          </ul>
-
-          <p className="text-[11px] leading-relaxed text-neutral-500">
-            All endpoints require an API key passed in the{" "}
-            <code className="rounded bg-neutral-100 px-1 py-0.5 text-[10px]">
-              x-api-key
-            </code>{" "}
-            header.
-          </p>
+          </Button>
         </div>
       </section>
 
-      <section id="get-key" className="mt-16 border-t border-neutral-200 pt-10">
-        <div className="max-w-xl space-y-3">
-          <h2 className="text-sm font-semibold tracking-tight text-neutral-900">
-            Get a test API key
-          </h2>
-          <p className="text-xs leading-relaxed text-neutral-600">
-            Use the{" "}
-            <code className="rounded bg-neutral-100 px-1 py-0.5 text-[11px]">
+      <Section
+        tight
+        title="What you get"
+        description="A small set of dependable HTTP utilities instead of another full platform."
+      >
+        <div className={cn(layout.grid, "md:grid-cols-3")}>
+          <Card className="p-4">
+            <h3 className="text-sm font-semibold text-neutral-900">
+              Simple HTTP
+            </h3>
+            <p className={typography.small + " mt-2"}>
+              Plain JSON over HTTP. No SDKs required, just your usual HTTP client.
+            </p>
+          </Card>
+
+          <Card className="p-4">
+            <h3 className="text-sm font-semibold text-neutral-900">
+              Small building blocks
+            </h3>
+            <p className={typography.small + " mt-2"}>
+              Each endpoint solves one task: validate, inspect, clean or snapshot.
+            </p>
+          </Card>
+
+          <Card className="p-4">
+            <h3 className="text-sm font-semibold text-neutral-900">
+              Usage-based keys
+            </h3>
+            <p className={typography.small + " mt-2"}>
+              Start with free limits per key. Upgrade when you need higher volume.
+            </p>
+          </Card>
+        </div>
+      </Section>
+
+      <Section
+        title="Endpoints"
+        description="Current endpoints, grouped by category. All require an API key in the x-api-key header."
+      >
+        <div className={cn(layout.grid, "md:grid-cols-2")}>
+          {featured.map((endpoint) => {
+            const method = postSlugs.has(endpoint.slug) ? "POST" : "GET"
+
+            return (
+              <Link
+                key={endpoint.slug}
+                href={`/docs/${endpoint.slug}`}
+                className="block"
+              >
+                <Card className="flex h-full flex-col p-4 transition-colors hover:border-neutral-300 hover:bg-neutral-50">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-neutral-900">
+                        {endpoint.name}
+                      </h3>
+                      <p className={typography.small + " mt-1"}>
+                        {endpoint.description}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge variant="outline" size="xs">
+                        {endpoint.category}
+                      </Badge>
+                      <Badge variant="neutral" size="xs">
+                        {method}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-xs text-neutral-700">
+                    <code className="rounded bg-neutral-100 px-2 py-1 font-mono text-[12px]">
+                      {method} /api/v1/{endpoint.slug}
+                    </code>
+                  </div>
+                </Card>
+              </Link>
+            )
+          })}
+        </div>
+      </Section>
+
+      <Section
+        id="auth"
+        title="API keys"
+        description="All endpoints require an API key passed in the x-api-key header."
+      >
+        <Card className="p-4">
+          <p className={typography.body}>
+            Send your key in the{" "}
+            <code className={typography.codeInline}>
+              x-api-key
+            </code>{" "}
+            header on every request.
+          </p>
+          <p className={typography.body + " mt-2"}>
+            In your own project, call{" "}
+            <code className={typography.codeInline}>
               /api/key/new
             </code>{" "}
-            endpoint in your own DataSoda project to mint keys. Pass them in the{" "}
-            <code className="rounded bg-neutral-100 px-1 py-0.5 text-[11px]">
-              x-api-key
-            </code>{" "}
-            header when calling any endpoint.
+            to create keys and store them with your other secrets.
           </p>
-        </div>
-      </section>
+        </Card>
+      </Section>
+
+      <Section
+        tight
+        title="Pricing"
+        description="Keys start on a free tier with a fixed number of calls per month. Upgrades are handled through Stripe Checkout."
+      >
+        <Card className="flex items-center justify-between p-4">
+          <div>
+            <p className={typography.body}>
+              Use the free tier while you integrate. Upgrade only when you need more traffic.
+            </p>
+          </div>
+          <Button variant="secondary" asChild>
+            <Link href="/upgrade">
+              View upgrade flow
+            </Link>
+          </Button>
+        </Card>
+      </Section>
     </div>
   )
+}
+
+function cn(...values: Array<string | null | undefined | false>) {
+  return values.filter(Boolean).join(" ")
 }

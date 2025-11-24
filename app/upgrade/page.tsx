@@ -1,54 +1,69 @@
+import { typography, layout } from "@/lib/ui/typography"
+import { Card } from "@/components/ui/card"
+import { CodeBlock } from "@/components/ui/code-block"
+import { Section } from "@/components/layout/section"
+
 export default function UpgradePage() {
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
-      <header className="mb-8 space-y-3">
-        <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-neutral-500">
-          Pricing
-        </p>
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
-          Usage-based billing for API keys
+    <div>
+      <header>
+        <h1 className={typography.pageTitle}>
+          Upgrade a key
         </h1>
-        <p className="max-w-2xl text-sm leading-relaxed text-neutral-600">
-          DataSoda is designed to be used inside your own systems. You start on a free
-          tier with a monthly call limit. When you need more headroom, you attach a
-          Stripe subscription to your key and keep calling the same endpoints.
+        <p className={typography.pageSubtitle}>
+          Keys start on a free tier. When you need higher limits, you upgrade the key through Stripe Checkout.
         </p>
       </header>
 
-      <section className="grid gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-        <div className="space-y-4 rounded-2xl border border-neutral-200 bg-white px-4 py-5 text-xs shadow-sm">
-          <h2 className="text-sm font-semibold text-neutral-900">
-            Model
-          </h2>
-          <ul className="space-y-2 text-xs leading-relaxed text-neutral-600">
-            <li>Free tier with a fixed monthly call allowance per key.</li>
-            <li>Paid tier with usage-based billing on top of a Stripe subscription.</li>
-            <li>You keep one endpoint surface. No separate sandbox endpoints.</li>
-          </ul>
-        </div>
+      <Section
+        tight
+        title="Plans"
+        description="High-level overview of free and paid plans for one key."
+      >
+        <Card className="p-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <h3 className="text-sm font-semibold text-neutral-900">
+                Free
+              </h3>
+              <ul className={typography.small + " mt-2 space-y-1"}>
+                <li>Fixed number of calls per month</li>
+                <li>Same endpoints and response formats</li>
+                <li>Good for testing and low traffic</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-neutral-900">
+                Paid
+              </h3>
+              <ul className={typography.small + " mt-2 space-y-1"}>
+                <li>Higher call limits for the same key</li>
+                <li>Usage-based billing through Stripe</li>
+                <li>Suitable for production workloads</li>
+              </ul>
+            </div>
+          </div>
+        </Card>
+      </Section>
 
-        <div className="space-y-4 rounded-2xl border border-neutral-200 bg-white px-4 py-5 text-xs shadow-sm">
-          <h2 className="text-sm font-semibold text-neutral-900">
-            Start a checkout session
-          </h2>
-          <p className="text-xs leading-relaxed text-neutral-600">
-            From your own backend, call the upgrade endpoint with the key you want
-            to upgrade. It returns a Stripe Checkout URL you redirect the user to.
+      <Section
+        title="Start a checkout session"
+        description="Call the upgrade endpoint from your own backend or script with the key you want to upgrade."
+      >
+        <Card className="p-4 space-y-3">
+          <p className={typography.body}>
+            The upgrade endpoint returns a Stripe Checkout URL. Redirect the user there to complete payment for that key.
           </p>
-          <pre className="overflow-x-auto rounded-xl bg-neutral-900 px-3 py-3 font-mono text-[11px] text-neutral-50">
+          <CodeBlock>
 {`curl -X POST "https://api.datasoda.io/api/upgrade/checkout" \\
   -H "Content-Type: application/json" \\
   -d '{"apiKey":"YOUR_KEY"}'`}
-          </pre>
-          <p className="text-[11px] text-neutral-600">
-            After checkout completes, webhooks mark the key as{" "}
-            <span className="rounded bg-neutral-100 px-1 py-0.5 text-[10px]">
-              PAID
-            </span>{" "}
-            and remove the free-tier limit for that key.
+          </CodeBlock>
+          <p className={typography.small}>
+            After checkout completes, webhooks mark the key as paid and lift the free-tier limit for that key.
           </p>
-        </div>
-      </section>
+        </Card>
+      </Section>
     </div>
   )
 }
